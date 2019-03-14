@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>订单管理</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/aui-slide.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+        .empty{ text-align: center; padding: 120px 0; }
+        .span1{
+            font-size: 15px;
+            margin:1px;
+        }
+        .li1{
+            margin-top: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header2" class="aui-tab">
+        <div class="aui-tab-item tapmode aui-active" id="doing" onclick="show( this )">进行中</div>
+        <div class="aui-tab-item tapmode" id="finish" onclick="show( this )">已完成</div>
+    </div>
+    <ul class="aui-list aui-list-in">
+    <div id="content2">
+          <div id="doing_show">
+          </div>
+          <div id="finish_show" style="display:none;">
+
+          </div>
+    </div>
+    </ul>
+
+</body>
+</html>
+<script type="text/javascript" src="../script/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+    apiready = function () {
+        api.setRefreshHeaderInfo(function(ret, err){
+            toDoRequest();
+        });
+    var id = $api.getStorage('id');
+    if(!id){
+        api.openWin({
+            name: 'login',
+            url: './html/login_win.html',
+            pageParam: {
+                name: 'login'
+            }
+        });
+    }else{
+        api.ajax({
+            url: 'http://hj.lljiankang.top/api/app/order',
+            method: 'post',
+            data: {
+                values: {
+                    id: id
+                },
+            }
+        },function(ret, err){
+          if (ret) {
+              if(ret.code == 200){
+                  var doing_str = '';
+                  var doing_end_time = '';
+                  var doing_order_str = '';
+                  for(var i=0;i<ret.ret.doing.length;i++){
+                      var ltool = '';
+                      var rtool = '';
+                      for(var ii=0;ii<ret.ret.doing[i].tool_numstr.length-1;ii++){
+                          ltool = ltool + '<span class="span1">&nbsp;</span><br/>';
+                      }
+                      for(var ii=0;ii<ret.ret.doing[i].tool_numstr.length;ii++){
+                          rtool = rtool + '<span class="span1">'+ret.ret.doing[i].tool_numstr[ii]+'</span><br/>';
+                      }
+                      rtool = rtool + '<span class="span1" onclick="orderDetail('+ret.ret.doing[i].order_number+')">查看订单详情</span><br/>';
+                      if(ret.ret.doing[i].end_time == null){
+                          doing_end_time = '未结束';
+                      }else{
+                          doing_end_time = ret.ret.doing.end_time;
+                      }
+                      if(ret.ret.doing[i].order_number){
+                        doing_str = doing_str + '<li class="aui-list-item li1" style="margin-top:5%;"><div class="aui-list-item-title"><span class="span1">订单号</span><br/><span class="span1">订单开启时间</span><br/><span class="span1">订单结束时间</span><br/><span class="span1">租借用户</span><br/><span class="span1">用户手机</span><br/><span class="span1">检测器编号</span><br/>'+ltool+'</div>';
+
+                        doing_str = doing_str + '<div class="aui-list-item-title"><span class="span1">'+ret.ret.doing[i].order_number+'</span><br/><span class="span1">'+ret.ret.doing[i].created_at+'</span><br/><span class="span1">'+doing_end_time+'</span><br/><span class="span1">'+ret.ret.doing[i].user_name+'</span><br/><span class="span1">'+ret.ret.doing[i].user_phone+'</span><br/>'+rtool+'</div></li>';
+                      }else{
+                          order_str = '';
+                      }
+                  }
+                  $("#doing_show").html(doing_str);
+
+                  var finish_str = '';
+                  var finish_end_time = '';
+                  var finish_order_str = '';
+                  for(var i=0;i<ret.ret.finish.length;i++){
+                      var ltool = '';
+                      var rtool = '';
+                      for(var ii=0;ii<ret.ret.finish[i].tool_numstr.length-1;ii++){
+                          ltool = ltool + '<span class="span1">&nbsp;</span><br/>';
+                      }
+                      for(var ii=0;ii<ret.ret.finish[i].tool_numstr.length;ii++){
+                          rtool = rtool + '<span class="span1">'+ret.ret.finish[i].tool_numstr[ii]+'</span><br/>';
+                      }
+                      rtool = rtool + '<span class="span1" onclick="orderDetail('+ret.ret.finish[i].order_number+')">查看订单详情</span><br/>';
+                      if(ret.ret.finish[i].end_time == null){
+                          finish_end_time = '未结束';
+                      }else{
+                          finish_end_time = ret.ret.finish.end_time;
+                      }
+                      if(ret.ret.finish[i].order_number){
+                        finish_str = finish_str + '<li class="aui-list-item li1" style="margin-top:5%;"><div class="aui-list-item-title"><span class="span1">订单号</span><br/><span class="span1">订单开启时间</span><br/><span class="span1">订单结束时间</span><br/><span class="span1">租借用户</span><br/><span class="span1">用户手机</span><br/><span class="span1">检测器编号</span><br/>'+ltool+'</div>';
+
+                        finish_str = finish_str + '<div class="aui-list-item-title"><span class="span1">'+ret.ret.finish[i].order_number+'</span><br/><span class="span1">'+ret.ret.finish[i].created_at+'</span><br/><span class="span1">'+finish_end_time+'</span><br/><span class="span1">'+ret.ret.finish[i].user_name+'</span><br/><span class="span1">'+ret.ret.finish[i].user_phone+'</span><br/>'+rtool+'</div></li>';
+                      }else{
+                          order_str = '';
+                      }
+                  }
+                  $("#finish_show").html(finish_str);
+
+
+              }else{
+                  api.toast({
+                  　　msg: (ret.message)?ret.message:ret.ret,
+                  　　duration: 1000,
+                  　　location: 'middle'
+            　　　});
+              }
+          } else {
+              console.log(JSON.stringify( err ));
+              api.toast({
+              　　msg: '未知错误',
+              　　duration: 1000,
+              　　location: 'middle'
+        　　　});
+          }
+        });
+    }
+
+
+}
+    function orderDetail(order_number){
+        api.openWin({
+            name: 'order_detail',
+            url: './order_detail.html',
+            pageParam: {
+                order_number: order_number
+            }
+        });
+
+    }
+
+    function show( tag ){
+        if( tag == $api.dom('#header2 div.aui-active') )return;
+        var eHeaderLis = $api.domAll('#header2 div'),
+            index = 0;
+        for (var i = 0,len = eHeaderLis.length; i < len; i++) {
+            if( tag == eHeaderLis[i] ){
+                index = i;
+            }else{
+                $api.removeCls(eHeaderLis[i], 'aui-active');
+            }
+        }
+        $api.addCls( eHeaderLis[index], 'aui-active');
+        if(index == 0){
+            $api.removeAttr($api.dom('#doing_show'),'style');
+            $api.attr($api.dom('#finish_show'),'style','display:none');//隐藏
+        }else{
+            $api.removeAttr($api.dom('#finish_show'),'style');
+            $api.attr($api.dom('#doing_show'),'style','display:none');//隐藏
+        }
+
+    }
+
+    function toDoRequest(){
+        api.refreshHeaderLoadDone(); //复位下拉刷新
+        window.location.reload();//刷新页面
+    }
+
+</script>

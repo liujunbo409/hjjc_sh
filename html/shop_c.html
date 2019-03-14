@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>商家管理信息</title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css"/>
+    <!-- <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/> -->
+    <style>
+        .empty{ text-align: center; padding: 120px 0; }
+    </style>
+</head>
+<body>
+    <header class="aui-bar aui-bar-nav" id="aui-header" style="background-color: #323237;">
+        <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+            <span class="aui-iconfont aui-icon-left"></span>
+        </a>
+        <div class="aui-title">商家管理信息</div>
+    </header>
+    <div style="width:95%;margin:auto;margin-top:5%;">
+        <ul class="aui-list aui-list-in">
+            <li class="aui-list-item">
+                <div class="aui-list-item-inner aui-list-item-arrow">
+                    <span style="width:30%;">管理员姓名: </span>
+                    <span style="margin:auto;width:70%;"><input id="name" style="" value="" readonly></span>
+                </div>
+            </li>
+            <li class="aui-list-item">
+                <div class="aui-list-item-inner aui-list-item-arrow">
+                    <span style="width:30%;">管理员手机: </span>
+                    <span style="margin:auto;width:70%;"><input id="phone" style="" value="" readonly></span>
+                </div>
+            </li>
+        </ul>
+        <input type="button" class="aui-btn aui-btn-block aui-btn-info aui-btn-sm" style="margin-top:5%;" onclick="name_phone()" value="更换姓名与手机" />
+        <input type="button" class="aui-btn aui-btn-block aui-btn-info aui-btn-sm" style="margin-top:5%;" onclick="update_pwd()" value="更换密码" />
+    </div>
+</body>
+</html>
+<script type="text/javascript" src="../script/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+      apiready = function(){
+        api.addEventListener({
+            name: 'myEvent'
+        }, function(ret, err) {
+            if (ret.value.state == 'name_phone') {
+                window.location.reload();//刷新页面
+            }
+        });
+
+        api.sendEvent({
+            name: 'myEvent',
+            extra: {
+                state: 'no'
+            }
+        });
+
+        api.parseTapmode();
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+        var id = $api.getStorage('id');
+        var name = $api.getStorage('name');
+        var phone = $api.getStorage('phone');
+        if(id && name && phone){
+            $('#name').val(name);
+            $('#phone').val(phone);
+        }else{
+            api.openWin({
+                name: 'login',
+                url: './html/login_win.html',
+                pageParam: {
+                    name: 'login'
+                }
+            });
+        }
+    }
+    function name_phone(){
+        api.confirm({
+                title: '更换姓名与手机号需等待审核是否继续更换',
+                msg: '',
+                buttons: [ '确定', '取消' ]
+            },function ( ret, err ) {
+                var index = ret.buttonIndex;
+                if ( index == 1 ) {
+                    api.openWin({
+                        name: 'name_phone',
+                        url: './name_phone.html',
+                        pageParam: {
+                            name: 'name_phone'
+                        }
+                    });
+                }
+            });
+    }
+    function update_pwd(){
+        api.openWin({
+            name: 'update_pwd',
+            url: './update_pwd.html',
+            pageParam: {
+                name: 'update_pwd'
+            }
+        });
+    }
+    function closeWin(){
+        api.closeWin({
+        });
+    }
+</script>

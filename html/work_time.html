@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>营业时间</title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css"/>
+    <!-- <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/> -->
+    <style>
+        .empty{ text-align: center; padding: 120px 0; }
+    </style>
+</head>
+<body>
+    <header class="aui-bar aui-bar-nav" id="aui-header" style="background-color: #323237;">
+        <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+            <span class="aui-iconfont aui-icon-left"></span>
+        </a>
+        <div class="aui-title">营业时间</div>
+    </header>
+    <div style="width:95%;margin:auto;margin-top:5%;">
+        <ul class="aui-list aui-list-in">
+            <li class="aui-list-item">
+                <div class="aui-list-item-inner aui-list-item-arrow">
+                    <span style="width:25%;">营业时间</span>
+                    <span style="margin:auto;width:75%;"><input style="margin-left:20%;margin-top:5%;" id="open_time" type="time" value=""></span>
+                </div>
+            </li>
+            <li class="aui-list-item">
+                <div class="aui-list-item-inner aui-list-item-arrow">
+                    <span style="width:25%;">歇业时间</span>
+                    <span style="margin:auto;width:75%;"><input style="margin-left:20%;margin-top:5%;" type="time" id="close_time" value=""></span>
+                </div>
+            </li>
+        </ul>
+        <input type="button" class="aui-btn aui-btn-block aui-btn-info aui-btn-sm" style="margin-top:5%;" onclick="save_time()" value="保存" />
+    </div>
+
+</body>
+</html>
+<script type="text/javascript" src="../script/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+    apiready = function(){
+        api.parseTapmode();
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+        $("#open_time").attr('value',api.pageParam.open_time);
+        $("#close_time").attr('value',api.pageParam.close_time);
+    }
+    function save_time(){
+        var id = $api.getStorage('id');
+        var open_time = $api.val($api.byId('open_time')),
+            close_time = $api.val($api.byId('close_time'));
+        if(open_time.length == 0){
+            api.toast({
+                msg: '营业时间未选择',
+                duration: 1000,
+                location: 'middle'
+            });
+            return;
+        }
+        if(close_time.length == 0){
+            api.toast({
+                msg: '歇业时间未选择',
+                duration: 1000,
+                location: 'middle'
+            });
+            return;
+        }
+        if(open_time > close_time){
+            api.toast({
+                msg: '开始营业时间不能大于歇业时间',
+                duration: 1000,
+                location: 'middle'
+            });
+            return;
+        }
+        api.ajax({
+            url: 'http://hj.lljiankang.top/api/app/update_time',
+            method: 'post',
+            data: {
+                values: {
+                    id: id,
+                    open_time: open_time,
+                    close_time: close_time,
+                },
+            }
+        },function(ret, err){
+            // console.log( JSON.stringify(ret) );
+            if (ret.code == 200) {
+                api.sendEvent({
+                    name: 'myEvent',
+                    extra: {
+                        state: 'no'
+                    }
+                });
+                api.closeWin({
+                });
+            } else {
+                api.toast({
+                　　msg: (ret.message)?ret.message:ret.ret,
+                　　duration: 1000,
+                　　location: 'middle'
+          　　　});
+            }
+        });
+
+    }
+    function closeWin(){
+        api.closeWin({
+        });
+    }
+</script>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>商家管理</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+        .empty{ text-align: center; padding: 120px 0; }
+        .span1{
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        .li1{
+            margin-top: 5%;
+        }
+        .div1{
+            height:50px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="aui-card-list">
+            <div class="aui-card-list-content-padded">
+                <img onclick="selectPhoto()" id="shop_img" src="../image/api_1.png" width="100%" height="230px" alt="">
+                <!-- <img onclick="uploadHeadPic('idcard_img_1','idcard_img_1_img')" id="idcard_img_1_img" src="../image/api_1.png" width="100%" height="230px" alt=""> -->
+
+            </div>
+            <div class="aui-card-list-footer aui-border-t">
+                <span class="span1" id="shop_name">&nbsp;</span>
+                <span class="span1" id="address">&nbsp;</span>
+            </div>
+        </div>
+        <input id="name" type="hidden" value="">
+        <ul class="aui-list aui-list-in">
+            <li class="aui-list-item div1">
+                <div class="aui-list-item-inner aui-list-item-arrow" onclick="work_time()"><span class="span1">营业时间</span></br><span id="add_str1"></span></div>
+            </li>
+            <li class="aui-list-item div1">
+                <div class="aui-list-item-inner aui-list-item-arrow" onclick="phone()"><span class="span1">商家电话</span></br><span id="add_str2"></span></div>
+            </li>
+            <li class="aui-list-item div1">
+                <div class="aui-list-item-inner aui-list-item-arrow" onclick="shop_c()">
+                    <span class="span1">商家管理信息</span>
+                </div>
+            </li>
+            <li class="aui-list-item div1">
+                <div class="aui-list-item-inner aui-list-item-arrow"  onclick="rent_sharing()">
+                    <span class="span1">租金分成</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>
+<script type="text/javascript" src="../script/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="../script/common.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+    apiready = function () {
+        api.addEventListener({
+            name: 'myEvent'
+        }, function(ret, err) {
+            if (ret.value.state == 'no') {
+                window.location.reload();//刷新页面
+            }
+        });
+        api.setRefreshHeaderInfo(function(ret, err){
+            toDoRequest();
+        });
+        var id = $api.getStorage('id');
+        if(!id){
+            api.openWin({
+                name: 'login',
+                url: './html/login_win.html',
+                pageParam: {
+                    name: 'login'
+                }
+            });
+        }else{
+            api.ajax({
+                url: 'http://hj.lljiankang.top/api/app/shop',
+                method: 'post',
+                data: {
+                    values: {
+                        id: id
+                    },
+                }
+            },function(ret, err){
+              if (ret) {
+                // console.log( JSON.stringify(ret) );
+                  if(ret.code == 200){
+                      var shop_img=ret.ret.shop_img;
+                      var shop_name=ret.ret.shop_name;
+                      var address=ret.ret.address;
+                      var start_time='';
+                      var close_time='';
+                      var phone = '';
+                      if(ret.ret.open_time == null){
+                          start_time = '';
+                      }else{
+                          start_time = ret.ret.open_time;
+                      }
+                      if(ret.ret.close_time == null){
+                          close_time = '';
+                      }else{
+                          close_time = ret.ret.close_time;
+                      }
+                      if(ret.ret.phone == null){
+                          phone = '';
+                      }else{
+                          phone = ret.ret.phone;
+                      }
+                      if(ret.ret.name == null){
+                          name = '';
+                      }else{
+                          name = ret.ret.name;
+                      }
+                      $("#shop_name").html(shop_name);
+                      $("#address").html(address);
+                      $("#add_str1").html(start_time+' - '+close_time);
+                      $("#add_str2").html(phone);
+                      $("#name").val(name);
+                      $("#shop_img").attr("src", shop_img);
+                      $api.setStorage('phone', phone);
+                      $api.setStorage('name', name);
+                  }else{
+                      api.toast({
+                      　　msg: (ret.message)?ret.message:ret.ret,
+                      　　duration: 1000,
+                      　　location: 'middle'
+                　　　});
+                  }
+              } else {
+                  // console.log(JSON.stringify( err ));
+                  api.toast({
+                  　　msg: '未知错误',
+                  　　duration: 1000,
+                  　　location: 'middle'
+            　　　});
+              }
+            });
+        }
+    }
+
+    //上传照片
+    function selectPhoto() {
+        api.actionSheet({
+            cancelTitle: '取消',
+            buttons: ['拍照', '打开相册']
+        }, function (ret, err) {
+            var sourceType
+            if (ret.buttonIndex == 1) {
+                sourceType = 'camera'
+            } else if (ret.buttonIndex == 2) {
+                sourceType = 'album'
+            } else {
+                return;
+            }
+            openPhotoOrAlbum(sourceType, handleAddPhoto, 'shop_img')
+        });
+    }
+
+    function handleAddPhoto(ret, err, dom_id) {
+        var img = ret.data;
+        // console.log("测试调用参数:" + JSON.stringify(ret));
+        if (ret) {
+            var img_url = ret.data;
+            var file_key = getQiniuKey() + "." + getFileType(img_url);
+            var qiniuUpfile = api.require('qiniuUpfile');
+            qiniuUpfile.upfile({
+                file: img_url,
+                name: file_key
+            }, function (ret, err) {
+                // console.log("测试回调参数:" + JSON.stringify(ret));
+                if (ret.status) {
+                    if (ret.oper === "complete") {
+                        var id = $api.getStorage('id');
+                        var img_url_v = getImgRealUrl(ret.info.key);
+                        var new_src = qiniuUrlTool(img_url_v, "avatar");
+                        console.log("qiniu tool:" + new_src);
+                        api.ajax({
+                            url: 'http://hj.lljiankang.top/api/app/add_img',
+                            method: 'post',
+                            data: {
+                                values: {
+                                    id: id,
+                                    shop_img: new_src,
+                                },
+                            }
+                        },function(ret, err){
+                            if (ret.code ==200) {
+                                $("#" + dom_id).attr("src", new_src);
+                            } else {
+                                api.toast({
+                                　　msg: (ret.message)?ret.message:ret.ret,
+                                　　duration: 1000,
+                                　　location: 'middle'
+                                });
+                                return;
+                            }
+                        });
+                    } else if (ret.oper === "progress"){
+                        $("#" + dom_id).attr("src", qiniuUrlTool(img_url_v, "avatar"));
+                    }
+                }
+            })
+        }
+    }
+
+    function toDoRequest(){
+        api.refreshHeaderLoadDone(); //复位下拉刷新
+        window.location.reload();//刷新页面
+    }
+    function work_time(){
+        var work_time = $('#add_str1').html();
+        api.openWin({
+            name: 'work_time',
+            url: './work_time.html',
+            pageParam: {
+                open_time: work_time.substring(0,5),
+                close_time: work_time.substring(8,13),
+            }
+        });
+    }
+    function phone(){
+        var phone = $('#add_str2').html();
+        api.openWin({
+            name: 'phone',
+            url: './phone.html',
+            pageParam: {
+                phone: phone,
+            }
+        });
+    }
+    function shop_c(){
+        var phone = $('#add_str2').html();
+        var name = $('#name').val();
+        api.openWin({
+            name: 'shop_c',
+            url: './shop_c.html',
+            pageParam: {
+                phone: phone,
+                name: name,
+            }
+        });
+    }
+    function rent_sharing(){
+        api.toast({
+        　　msg: '敬请期待!',
+        　　duration: 1000,
+        　　location: 'middle'
+        });
+        return;
+    }
+
+</script>

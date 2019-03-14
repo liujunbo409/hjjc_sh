@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>更换姓名与手机号</title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css"/>
+    <!-- <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/> -->
+    <style>
+        .empty{ text-align: center; padding: 120px 0; }
+    </style>
+</head>
+<body>
+    <header class="aui-bar aui-bar-nav" id="aui-header" style="background-color: #323237;">
+        <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+            <span class="aui-iconfont aui-icon-left"></span>
+        </a>
+        <div class="aui-title">更换姓名与手机号</div>
+    </header>
+    <div style="width:95%;margin:auto;margin-top:5%;">
+        <ul class="aui-list aui-list-in">
+            <li class="aui-list-item">
+                <div class="aui-list-item-inner">
+                    <div class="aui-list-item-title" style="width:165px">管理员姓名</div>
+                    <input placeholder="请输入姓名" id="name">
+                </div>
+            </li>
+            <li class="aui-list-item">
+                <div class="aui-list-item-inner">
+                    <div class="aui-list-item-title" style="width:130px">管理员手机</div>
+                    <input type="number" placeholder="请输入新手机号" id="phone">
+                </div>
+            </li>
+            <div class="aui-list-item">
+                <div class="aui-list-item-inner">
+                    <div class="aui-list-item-title" style="width:165px">短信验证码</div>
+                    <div class="aui-list-item-title" style=""><input type="number" placeholder="输入短信验证码" id="sms_code" style=""></div>
+                    <div class="aui-btn aui-btn-info" style="width: 5rem;" onclick="send_code()" id="getVcode">获取验证码</div>
+                    <div class="aui-btn aui-btn-info" style="width: 5rem;display: none;" id="cannotgetVcode">获取验证码</div>
+                </div>
+            </div>
+            <li class="aui-list-item">
+                <div class="aui-list-item-inner">
+                    <div class="aui-list-item-title" style="width:165px">更换备注</div>
+                    <input placeholder="请输入更换信息详细情况说明" id="remarks">
+                </div>
+            </li>
+        </ul>
+        <input type="button" class="aui-btn aui-btn-block aui-btn-info aui-btn-sm" style="margin-top:5%;" onclick="name_phone()" value="提交审核" />
+    </div>
+
+</body>
+</html>
+<script type="text/javascript" src="../script/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+    apiready = function(){
+        api.parseTapmode();
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+        var id = $api.getStorage('id');
+        if(!id){
+            api.openWin({
+                name: 'login',
+                url: './html/login_win.html',
+                pageParam: {
+                    name: 'login'
+                }
+            });
+        }else{
+
+        }
+    }
+    function name_phone(){
+        var id = $api.getStorage('id');
+        if(!id){
+            api.openWin({
+                name: 'login',
+                url: './html/login_win.html',
+                pageParam: {
+                    name: 'login'
+                }
+            });
+        }
+        var name = $('#name').val();
+        var phone = $('#phone').val();
+        var sms_code = $('#sms_code').val();
+        var remarks = $('#remarks').val();
+        if(name.length == 0){
+            api.toast({
+                msg: '管理员姓名未填写',
+                duration: 1000,
+                location: 'middle'
+            });
+            return;
+        }
+        if(phone.length == 0){
+            api.toast({
+                msg: '电话号码未填写',
+                duration: 1000,
+                location: 'middle'
+            });
+            return;
+        }
+        if(sms_code.length == 0){
+            api.toast({
+                msg: '短信验证码未填写',
+                duration: 1000,
+                location: 'middle'
+            });
+            return;
+        }
+        if(remarks.length == 0){
+            api.toast({
+                msg: '备注未填写',
+                duration: 1000,
+                location: 'middle'
+            });
+            return;
+        }
+        api.ajax({
+            url: 'http://hj.lljiankang.top/api/app/name_phone',
+            method: 'post',
+            data: {
+                values: {
+                    id: id,
+                    name: name,
+                    phone: phone,
+                    sms_code: sms_code,
+                    remarks: remarks,
+                },
+            }
+        },function(ret, err){
+            if (ret) {
+                // console.log( JSON.stringify(ret) );
+                if(ret.code == 200){
+                    $api.setStorage('name', name);
+                    $api.setStorage('phone', phone);
+                    api.sendEvent({
+                        name: 'myEvent',
+                        extra: {
+                            state: 'name_phone'
+                        }
+                    });
+
+                    api.closeWin({
+                    });
+                }else{
+                    api.toast({
+                    　　msg: (ret.message)?ret.message:ret.ret,
+                    　　duration: 1000,
+                    　　location: 'middle'
+              　　　});
+                }
+            } else {
+                console.log(JSON.stringify( err ));
+                api.toast({
+                　　msg: '未知错误',
+                　　duration: 1000,
+                　　location: 'middle'
+          　　　});
+            }
+          });
+    }
+    var countdown = 60;
+    function send_code(){
+        var phone = $api.val($api.byId('phone'));
+        if (!$api.trim(phone)) {
+            api.toast({
+                msg: '请输入手机号',
+                duration: 1000,
+                location: 'middle'
+          });
+          return;
+        }
+        api.ajax({
+            url: 'http://hj.lljiankang.top/api/app/send_code_new',
+            method: 'post',
+            data: {
+                values: {
+                    'phone': phone
+                },
+            }
+        },function(ret, err){
+          // console.log( JSON.stringify( ret ) );
+          if (ret) {
+              if(ret.code == 200){
+                  settime();
+                  api.toast({
+                  　　msg: (ret.ret)?ret.ret:ret.message,
+                  　　duration: 1000,
+                  　　location: 'middle'
+            　　　});
+              }else{
+                  api.toast({
+                  　　msg: (ret.message)?ret.message:ret.ret,
+                  　　duration: 1000,
+                  　　location: 'middle'
+            　　　});
+              }
+          } else {
+              console.log(JSON.stringify( err ));
+              api.toast({
+              　　msg: '未知错误',
+              　　duration: 1000,
+              　　location: 'middle'
+        　　　});
+          }
+        });
+    }
+    /*
+    * 倒计时
+    * */
+    function settime() {
+        if (countdown == 0) {
+            $("#getVcode").css('display','block');
+            $("#cannotgetVcode").css('display','none');
+            countdown = 60;
+        } else {
+            $("#getVcode").css('display','none');
+            $("#cannotgetVcode").css('display','block');
+            $("#cannotgetVcode").html("重新发送(" + countdown + ")");
+            countdown--;
+            setTimeout(function() {
+                settime()
+            },1000)
+        }
+    }
+    function closeWin(){
+        api.closeWin({
+        });
+    }
+</script>

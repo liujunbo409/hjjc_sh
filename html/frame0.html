@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>设备管理</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+        .empty{ text-align: center; padding: 120px 0; }
+        .li1{
+            height: 100px;
+        }
+        .div1{
+            width:100%;
+            margin: auto;
+        }
+        .span1{
+            font-size: 16px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div style="width:95%;margin:auto;">
+        <ul class="aui-list aui-list-in" id="show">
+
+        </ul>
+    </div>
+</body>
+</html>
+<script type="text/javascript" src="../script/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+    apiready = function () {
+        api.setRefreshHeaderInfo(function(ret, err){
+            toDoRequest();
+        });
+        var id = $api.getStorage('id');
+        if(!id){
+            api.openWin({
+                name: 'login',
+                url: './html/login_win.html',
+                pageParam: {
+                    name: 'login'
+                }
+            });
+        }else{
+            api.ajax({
+                url: 'http://hj.lljiankang.top/api/app/tool',
+                method: 'post',
+                data: {
+                    values: {
+                        id: id
+                    },
+                }
+            },function(ret, err){
+              if (ret) {
+                  if(ret.code == 200){
+                      // alert(JSON.stringify( ret ));
+                      var str = '';
+                      var loan_status = '';
+                      var order_str = '';
+                      for(var i=0;i<ret.ret.length;i++){
+                          if(ret.ret[i].loan_status == 1){
+                              loan_status = '<span class="span1">未借出</span>';
+                          }else if(ret.ret[i].loan_status == 2){
+                              loan_status = '<span class="span1">已借出</span>';
+                          }else if(ret.ret[i].loan_status == 3){
+                              loan_status = '<span class="span1" style="color:red;"">已停用-待校准</span>';
+                          }else{
+                              loan_status = '';
+                          }
+                          if(ret.ret[i].order_number){
+                              order_str = '<div class="aui-list-item-title"><span class="span1">'+'订单号'+'</span><span class="span1">'+ret.ret[i].order_number+'</span></div>';
+                          }else{
+                              order_str = '';
+                          }
+                          str = str + '<li class="aui-list-item li1"><div class="div1"><div class="aui-list-item-title"><span class="span1">'+'检测器'+'</span><span class="span1">'+ret.ret[i].number+'</span></div><div class="aui-list-item-title"><span class="span1">'+'状态'+'</span>'+loan_status+'</div>'+ order_str +'</div></li>';
+                      }
+                      $("#show").html(str);
+                  }else{
+                      api.toast({
+                      　　msg: (ret.message)?ret.message:ret.ret,
+                      　　duration: 1000,
+                      　　location: 'middle'
+                　　　});
+                  }
+              } else {
+                  console.log(JSON.stringify( err ));
+                  api.toast({
+                  　　msg: '未知错误',
+                  　　duration: 1000,
+                  　　location: 'middle'
+            　　　});
+              }
+            });
+        }
+
+
+    }
+    function toDoRequest(){
+        api.refreshHeaderLoadDone(); //复位下拉刷新
+        window.location.reload();//刷新页面
+    }
+
+</script>

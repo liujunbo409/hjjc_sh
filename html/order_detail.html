@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <!-- <link rel="stylesheet" type="text/css" href="./css/api.css"/>
+    <link rel="stylesheet" type="text/css" href="./css/style.css"/> -->
+    <style>
+        .empty{ text-align: center; padding: 120px 0; }
+        .li1{
+            margin-bottom: : 10px;
+        }
+        .div1{
+            width:100%;
+            margin: auto;
+            /*margin-left: 50px;*/
+        }
+        .span1{
+            font-size: 16px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header class="aui-bar aui-bar-nav" id="aui-header" style="background-color: #323237;">
+        <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+            <span class="aui-iconfont aui-icon-left"></span>
+        </a>
+        <div class="aui-title">订单详情</div>
+    </header>
+    <div style="width:95%;margin:auto;">
+        <ul class="aui-list aui-list-in">
+            <div id="order_info"></div>
+            <div id="tools_info"></div>
+        </ul>
+    </div>
+
+</body>
+</html>
+<script type="text/javascript" src="../script/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript">
+    apiready = function(){
+        api.parseTapmode();
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+        var order_number =  JSON.stringify( api.pageParam.order_number );
+
+        var id = $api.getStorage('id');
+        if(!id){
+            api.openWin({
+                name: 'login',
+                url: './html/login_win.html',
+                pageParam: {
+                    name: 'login'
+                }
+            });
+        }else{
+            api.ajax({
+                url: 'http://hj.lljiankang.top/api/app/order_detail',
+                method: 'post',
+                data: {
+                    values: {
+                        order_number: order_number,
+                        id: id
+                    },
+                }
+            },function(ret, err){
+              if (ret) {
+                  if(ret.code == 200){
+                      if(ret.ret.order.end_time == null){
+                          end_time = '未结束';
+                      }else{
+                          end_time = ret.ret.order.end_time;
+                      }
+                      var order_info = '<li class="aui-list-item li1" style="margin-top:5%;margin-bottom:5%;"><div class="aui-list-item-inner" style=float:left;”><div class="aui-list-item-title"><span class="span1">订单号</span><br/><span class="span1">订单开启时间</span><br/><span class="span1">订单结束时间</span><br/><span class="span1">租借用户</span><br/><span class="span1">用户手机</span><br/></div><div class="aui-list-item-title"><span class="span1">'+ret.ret.order.order_number+'</span><br/><span class="span1">'+ret.ret.order.created_at+'</span><br/><span class="span1">'+end_time+'</span><br/><span class="span1">'+ret.ret.order.user_name+'</span><br/><span class="span1">'+ret.ret.order.user_phone+'</span><br/></div></div></li>';
+                      var tools_info = '';
+                      var loan_status = '';
+                      var is_pay = '';
+                      for(var i=0;i<ret.ret.tools.length;i++){
+                          if(ret.ret.tools[i].loan_status == 1){
+                              loan_status = '未归还';
+                          }else if(ret.ret.tools[i].loan_status == 2){
+                              loan_status = '已归还';
+                          }else{
+                              loan_status = '未知状态';
+                          }
+                          if(ret.ret.tools[i].rent_status == 1){
+                              is_pay = '未支付';
+                          }else if(ret.ret.tools[i].rent_status == 1){
+                              is_pay = '已支付';
+                          }else{
+                              is_pay = '未知状态';
+                          }
+                          tools_info = tools_info + '<li class="aui-list-item li1" style="margin-top:5%;margin-bottom:5%;"><div class="div1"><div class="aui-list-item-title"><span class="span1">检测器</span><span class="span1">'+ret.ret.tools[i].tool_number+'</span></div><div class="aui-list-item-title"><span class="span1">状态</span><span class="span1">'+loan_status+'</span></div><div class="aui-list-item-title"><span class="span1">租借时长</span><span class="span1">'+ret.ret.tools[i].lease_duration+'</span></div><div class="aui-list-item-title"><span class="span1">是否支付</span><span class="span1">'+is_pay+'</span></div></div></li>';
+                      }
+                      $("#order_info").html(order_info);
+                      $("#tools_info").html(tools_info);
+                  }else{
+                      api.toast({
+                      　　msg: (ret.message)?ret.message:ret.ret,
+                      　　duration: 1000,
+                      　　location: 'middle'
+                　　　});
+                  }
+              } else {
+                  console.log(JSON.stringify( err ));
+                  api.toast({
+                  　　msg: '未知错误',
+                  　　duration: 1000,
+                  　　location: 'middle'
+            　　　});
+              }
+            });
+        }
+    };
+    function closeWin(){
+        api.closeWin({
+        });
+    }
+</script>
